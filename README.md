@@ -1,6 +1,7 @@
-# hr
-Solutions to hackerrank problems.
+# Contests
+Solutions to programming contest problems.
 
-I'm planning on learning the Rust programming language this way.
+## Guide
 
-I've started sprinkling in 'TODO's when I don't understand something.
+ * lib.rs -- quick rust code I can copy to do IO.
+ * src/hr/ -- Hacker Rank
