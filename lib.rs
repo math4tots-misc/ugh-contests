@@ -1,4 +1,6 @@
-// ********* Just quick lib *********
+// Simple utility to do qucikly do IO in Rust.
+
+// ********* lib *********
 fn readln() -> String {
   let mut s = String::new();
   assert!(std::io::stdin().read_line(&mut s).is_ok());
