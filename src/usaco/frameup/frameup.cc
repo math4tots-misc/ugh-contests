@@ -1,23 +1,18 @@
-/* graph.cc
-
-NOTE: Requires C++11
-
-g++ --std=c++11 -Wall -Werror graph.cc && ./a.out
-
-Simple graph library for programming contests.
-
-Some version of this used in:
-  * usaco/milk6 (find_min_cut)
-
-If you add any features here, make sure to add tests in 'graph_sanity_check'!
+/*
+ID: math4to2
+LANG: C++11
+TASK: frameup
 */
 
-#include <assert.h>
 #include <iostream>
-
+#include <string>
+#include <fstream>
 #include <algorithm>
 #include <deque>
 #include <vector>
+#include <unordered_map>
+
+// NOTE: everything up to 'using namespace std' is from my personal lib.
 
 struct DefaultGraphOptions {
   typedef double WeightType;
@@ -221,173 +216,118 @@ private:
   std::vector<std::vector<EdgeId>> ids_of_edges_from;
 };
 
-void graph_sanity_check() {
-  // Test flood_fill
-  {
-    Graph<> graph(10);
-    graph.add_edge(0, 1, 5);
-    graph.add_edge(1, 2, 5);
-    graph.add_edge(2, 1, 1);
-    graph.add_edge(2, 4, 1);
-    graph.add_edge(1, 5, -1);
-    graph.add_edge(1, 6, 0);
+using namespace std;
 
-    std::vector<bool> flags;
-    graph.flood_fill(0, &flags);
-    assert(flags[0]);  // test that self is marked.
-    assert(flags[1]);
-    assert(flags[2]);  // test with 1 -> 2 -> 1 cycle.
-    assert(!flags[3]);  // test no edge case.
-    assert(flags[4]);  // test that 0 -> 1 -> 2 -> 4 works.
-    assert(!flags[5]);  // test non-positive edges are ignored.
-    assert(!flags[6]);
+unordered_map<int, char> i2lm;
+unordered_map<char, int> l2im;
 
-    graph.flood_fill(1, &flags);
-    assert(!flags[0]);
+int l2i(char letter) {
+  if (l2im.find(letter) == l2im.end()) {
+    int i = i2lm.size();
+    i2lm[i] = letter;
+    l2im[letter] = i;
   }
 
-  // Test find_path_bfs
-  {
-    Graph<> graph(10);
-    std::vector<Graph<>::EdgeId> path;
+  return l2im[letter];
+}
 
-    assert(graph.add_edge(0, 1, 1) == 0);
-    assert(graph.find_path_bfs(0, 1, &path));
-    assert(path.size() == 1);
-    assert(path[0] == 0);
-
-    assert(!graph.find_path_bfs(1, 0, &path));
-    assert(path.size() == 0);
-
-    assert(graph.add_edge(1, 0, 1) == 1);
-    assert(graph.find_path_bfs(1, 0, &path));
-    assert(path.size() == 1);
-    assert(path[0] == 1);
-
-    // fail path finding when they are not connected.
-    assert(!graph.find_path_bfs(0, 5, &path));
-    assert(path.size() == 0);
-
-    // multiple edges in path
-    assert(graph.add_edge(4, 5, 2) == 2);
-    assert(graph.add_edge(5, 6, 2) == 3);
-    assert(graph.add_edge(6, 7, 2) == 4);
-    assert(graph.add_edge(7, 8, -1) == 5);
-    assert(!graph.find_path_bfs(4, 8, &path));
-    assert(graph.find_path_bfs(4, 7, &path));
-    assert(path.size() == 3);
-
-    // if there are multiple paths, use one with fewest edges.
-    assert(graph.add_edge(4, 7, 1) == 6);
-    assert(graph.find_path_bfs(4, 7, &path));
-    assert(path.size() == 1);
-    assert(path[0] == 6);
-  }
-
-  // Test max flow
-  {
-    // Trivial case.
-    {
-      Graph<> graph(2);
-      assert(graph.add_edge(0, 1, 3) == 0);
-      assert(graph.edge(0).weight == 3);
-      assert(graph.find_max_flow(0, 1) == 3);
-      assert(graph.edge(0).weight == 0);
-    }
-    // Simple sequence case.
-    {
-      Graph<> graph(5);
-      assert(graph.add_edge(0, 1, 3) == 0);
-      assert(graph.add_edge(1, 2, 5) == 1);
-      assert(graph.edge(0).weight == 3);
-      assert(graph.edge(1).weight == 5);
-      assert(graph.find_max_flow(0, 2) == 3);
-      assert(graph.edge(0).weight == 0);
-      assert(graph.edge(1).weight == 2);
-    }
-    // Simple branching case.
-    {
-      Graph<> graph(5);
-      assert(graph.add_edge(0, 1, 3) == 0);
-      assert(graph.add_edge(1, 2, 5) == 1);
-      assert(graph.add_edge(0, 2, 12) == 2);
-      assert(graph.edge(0).weight == 3);
-      assert(graph.edge(1).weight == 5);
-      assert(graph.edge(2).weight == 12);
-      assert(graph.find_max_flow(0, 2) == 15);
-      assert(graph.edge(0).weight == 0);
-      assert(graph.edge(1).weight == 2);
-      assert(graph.edge(2).weight == 0);
-    }
-  }
-
-  // Test find_min_cut
-  {
-    Graph<> graph(5);
-    assert(graph.add_edge(0, 1, 7) == 0);
-    graph.add_edge(1, 2, 77);
-    graph.add_edge(2, 3, 777);
-    std::vector<Graph<>::EdgeId> edge_ids;
-    assert(graph.find_min_cut(0, 3, &edge_ids) == 7);
-    assert(edge_ids.size() == 1);
-    assert(edge_ids[0] == 0);
-  }
-
-  // Test custom Graph options.
-  {
-    struct GraphOpt {
-      typedef int WeightType;
-    };
-    static_assert(
-        std::is_same<Graph<GraphOpt>::Weight, int>::value,
-        "test that 'int' 'WeightType' is passed on to Graph");
-    static_assert(
-        !std::is_same<Graph<GraphOpt>::Weight, double>::value,
-        "double check that Weight is not double");
-  }
-
-  // Test find_all_topological_orderings
-  {
-    Graph<> graph(3);
-    std::vector<std::vector<Graph<>::NodeId>> orderings;
-    // Test free ordering.
-    graph.find_all_topological_orderings(&orderings);
-    assert(orderings.size() == 6);  // 3!
-    // All of the topological orderings should be in lexicographic order.
-    assert(orderings[0] == std::vector<Graph<>::NodeId>({0, 1, 2}));
-    assert(orderings[1] == std::vector<Graph<>::NodeId>({0, 2, 1}));
-
-    // Test with just one restriction.
-    graph.add_edge(1, 2, 1);
-    graph.find_all_topological_orderings(&orderings);
-    assert(orderings.size() == 3);
-    assert(orderings[0] == std::vector<Graph<>::NodeId>({0, 1, 2}));
-    assert(orderings[1] == std::vector<Graph<>::NodeId>({1, 0, 2}));
-    assert(orderings[2] == std::vector<Graph<>::NodeId>({1, 2, 0}));
-
-    // Test with full constraints.
-    graph.add_edge(0, 1, 1);
-    graph.find_all_topological_orderings(&orderings);
-    assert(orderings.size() == 1);
-    assert(orderings[0] == std::vector<Graph<>::NodeId>({0, 1, 2}));
-
-    // Ignore non-positive edges.
-    graph.add_edge(1, 0, -1);
-    graph.add_edge(2, 1, 0);
-    graph.find_all_topological_orderings(&orderings);
-    assert(orderings.size() == 1);
-    assert(orderings[0] == std::vector<Graph<>::NodeId>({0, 1, 2}));
-
-    // Too many constraints.
-    graph.add_edge(1, 0, 1);
-    graph.find_all_topological_orderings(&orderings);
-    assert(orderings.size() == 0);
-  }
-
-  std::cout << "*** All graph sanity checks pass! ***" << std::endl;
+char i2l(int i) {
+  return i2lm[i];
 }
 
 int main() {
-  graph_sanity_check();
-}
+  typedef Graph<> G;
 
+  ifstream fin("frameup.in");
+  ofstream fout("frameup.out");
+
+  int H, W, N = 0;
+  fin >> H >> W;
+
+  string line;
+  vector<string> p;
+  for (int i = 0; i < H; i++) {
+    fin >> line;
+    p.push_back(line);
+  }
+
+  for (int h = 0; h < H; h++) {
+    for (int w = 0; w < W; w++) {
+      if (p[h][w] != '.') {
+        int pN = 1 + l2i(p[h][w]);
+        N = N > pN ? N : pN;
+      }
+    }
+  }
+
+  G graph(N);
+  vector<int> left(N, -1);
+  vector<int> right(N, -1);
+  vector<int> up(N, -1);
+  vector<int> down(N, -1);
+
+  for (int h = 0; h < H; h++)
+    for (int w = 0; w < W; w++)
+      if (p[h][w] != '.' && up[l2i(p[h][w])] == -1)
+        up[l2i(p[h][w])] = h;
+
+  for (int h = H-1; h >= 0; h--)
+    for (int w = 0; w < W; w++)
+      if (p[h][w] != '.' && down[l2i(p[h][w])] == -1)
+        down[l2i(p[h][w])] = h;
+
+  for (int w = 0; w < W; w++)
+    for (int h = 0; h < H; h++)
+      if (p[h][w] != '.' && left[l2i(p[h][w])] == -1)
+        left[l2i(p[h][w])] = w;
+
+  for (int w = W-1; w >= 0; w--)
+    for (int h = 0; h < H; h++)
+      if (p[h][w] != '.' && right[l2i(p[h][w])] == -1)
+        right[l2i(p[h][w])] = w;
+
+  for (int n = 0; n < N; n++) {
+    int w, h;
+
+    h = up[n];
+    for (w = left[n]; w <= right[n]; w++)
+      if (p[h][w] != '.' && l2i(p[h][w]) != n)
+        graph.set_edge(n, l2i(p[h][w]), 1);
+
+    h = down[n];
+    for (w = left[n]; w <= right[n]; w++)
+      if (p[h][w] != '.' && l2i(p[h][w]) != n)
+        graph.set_edge(n, l2i(p[h][w]), 1);
+
+    w = left[n];
+    for (h = up[n]; h <= down[n]; h++)
+      if (p[h][w] != '.' && l2i(p[h][w]) != n)
+        graph.set_edge(n, l2i(p[h][w]), 1);
+
+    w = right[n];
+    for (h = up[n]; h <= down[n]; h++)
+      if (p[h][w] != '.' && l2i(p[h][w]) != n)
+        graph.set_edge(n, l2i(p[h][w]), 1);
+  }
+
+  vector<vector<G::NodeId>> orderings;
+  graph.find_all_topological_orderings(&orderings);
+
+  vector<vector<char>> ans;
+  for (auto& ord: orderings) {
+    vector<char> cc;
+    for (G::NodeId i: ord) {
+      cc.push_back(i2l(i));
+    }
+    ans.push_back(cc);
+  }
+
+  sort(ans.begin(), ans.end());
+
+  for (auto& ord: ans) {
+    for (char i: ord) {
+      fout << i;
+    }
+    fout << endl;
+  }
+}
