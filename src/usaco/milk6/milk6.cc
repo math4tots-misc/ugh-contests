@@ -7,8 +7,62 @@ TASK: milk6
 #include <vector>
 #include <deque>
 
+struct U128 {
+  // NOTE: Assumes unsigned long long is exactly 64 bits.
+  typedef unsigned long long u64;
+
+  u64 lower, upper;
+  U128(u64 value): lower(value), upper(0) {}
+  U128(u64 lower, u64 upper): lower(lower), upper(upper) {}
+  U128(const U128& x): lower(x.lower), upper(x.upper) {}
+
+  U128& operator=(const U128& x)=default;
+
+  bool operator==(U128 x) const {
+    return lower == x.lower && upper == x.upper;
+  }
+
+  bool operator<(U128 x) const {
+    return upper < x.upper || (upper == x.upper && lower < x.lower);
+  }
+
+  bool operator>(U128 x) const {
+    return upper > x.upper || (upper == x.upper && lower > x.lower);
+  }
+
+  U128 operator+(U128 x) const {
+    u64 new_lower = lower + x.lower;
+    return U128(new_lower, new_lower < lower ? upper+1 : upper);
+  }
+
+  // WARNING: Assumes *this > x
+  U128 operator-(U128 x) const {
+    return U128(lower - x.lower, (lower < x.lower ? upper-1 : upper));
+  }
+
+  U128 operator+=(U128 x) {
+    return *this = *this + x;
+  }
+
+  U128 operator-=(U128 x) {
+    return *this = *this - x;
+  }
+
+  U128 operator<<(int i) const {
+    return U128(lower << i, upper << i | lower >> (64-i));
+  }
+
+  U128 operator>>(int i) const {
+    return U128(lower >> i | upper << (64-i), upper >> i);
+  }
+
+  unsigned long long as_ull() const {
+    return lower;
+  }
+};
+
 struct Graph {
-  typedef long long Weight;
+  typedef U128 Weight;
   typedef int EdgeId;
   typedef int NodeId;
 
@@ -148,6 +202,15 @@ struct Graph {
 #include <algorithm>
 #include <iostream>
 
+void u128_sanity_check() {
+  U128 x(112288);
+  assert(x.as_ull() == 112288);
+  x += 1;
+  std::cout << x.as_ull() << std::endl;
+  assert(x.as_ull() == 112289);
+  std::cout << "*** All u128 sanity checks pass ***" << std::endl;
+}
+
 void graph_sanity_check() {
   // Test flood_fill
   {
@@ -260,9 +323,52 @@ void graph_sanity_check() {
     assert(edge_ids[0] == 0);
   }
 
-  std::cout << "*** All sanity checks pass! ***" << std::endl;
+  std::cout << "*** All graph sanity checks pass! ***" << std::endl;
+}
+
+#include <fstream>
+using namespace std;
+
+// #define COUNT_FACTOR 1001
+#define COUNT_SHIFT 20
+// #define ORDER_FACTOR (1LL << 32)
+#define ORDER_SHIFT 32
+typedef Graph::Weight I;
+
+I f(I& cost, int index) {
+  // Make sure we prefer solutions with fewer number of edges (COUNT_FACTOR)
+  // Also make sure that if there are multiple solutions with
+  // same number of edges, we prefer solutions with edges with
+  // smaller index (ORDER_FACTOR).
+
+  // TODO: Consider using 128 bit integer for 'I'.
+  return (((cost << COUNT_SHIFT) + 1) << ORDER_SHIFT) + (1 << index);
+}
+
+I invf(I cost) {
+  return (cost >> ORDER_SHIFT) >> COUNT_SHIFT;
 }
 
 int main() {
-  graph_sanity_check();
+  // graph_sanity_check();
+  // u128_sanity_check();
+
+  ifstream fin("milk6.in");
+  ofstream fout("milk6.out");
+  int N, M;
+  fin >> N >> M;
+  Graph graph(N);
+  for (int i = 0; i < M; i++) {
+    Graph::NodeId a, b;
+    unsigned long long ic;
+    fin >> a >> b >> ic;
+    Graph::Weight c(ic);
+    graph.add_edge(a-1, b-1, f(c, i));
+  }
+  
+  vector<Graph::EdgeId> edges;
+  fout << invf(graph.find_min_cut(0, N-1, &edges)).as_ull();
+  fout << " " << edges.size() << endl;
+  for (auto edge_id: edges)
+    fout << edge_id+1 << endl;
 }
