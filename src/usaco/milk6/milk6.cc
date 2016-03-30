@@ -3,66 +3,41 @@ ID: math4to2
 LANG: C++11
 TASK: milk6
 */
+
+/*
+
+NOTE:
+
+Hmm, so this passes the grader now, but I'm afraid this solution
+still isn't entirely correct.
+
+The editorial for this problem doesn't seem to mention the difficulty with
+which solution to print when there are more than one mincut with same number
+of edges.
+
+The solution editorial seems to mention: "Zhang Yunxiao writes: ... "
+and points out that the original problem poser's
+solution failed to address the ordering issue as well.
+
+I haven't taken the time to look at Yunxiao's solution too carefully.
+He seems to do some heuristics to address this issue, but I am not
+entirely convinced that it solves this issue.
+
+---
+
+I think I had a pretty simple solution to this by encoding the ordering
+information into bits in the weights, like the edge count was, but
+this involved too many bits. I couldn't seem to get gcc's 128 bit
+integer working on the grader's machine and my handwritten unsigned 128 bit
+integer implementation was too slow.
+
+*/
 #include <iostream>
 #include <vector>
 #include <deque>
 
-struct U128 {
-  // NOTE: Assumes unsigned long long is exactly 64 bits.
-  typedef unsigned long long u64;
-
-  u64 lower, upper;
-  U128(u64 value): lower(value), upper(0) {}
-  U128(u64 lower, u64 upper): lower(lower), upper(upper) {}
-  U128(const U128& x): lower(x.lower), upper(x.upper) {}
-
-  U128& operator=(const U128& x)=default;
-
-  bool operator==(U128 x) const {
-    return lower == x.lower && upper == x.upper;
-  }
-
-  bool operator<(U128 x) const {
-    return upper < x.upper || (upper == x.upper && lower < x.lower);
-  }
-
-  bool operator>(U128 x) const {
-    return upper > x.upper || (upper == x.upper && lower > x.lower);
-  }
-
-  U128 operator+(U128 x) const {
-    u64 new_lower = lower + x.lower;
-    return U128(new_lower, new_lower < lower ? upper+1 : upper);
-  }
-
-  // WARNING: Assumes *this > x
-  U128 operator-(U128 x) const {
-    return U128(lower - x.lower, (lower < x.lower ? upper-1 : upper));
-  }
-
-  U128 operator+=(U128 x) {
-    return *this = *this + x;
-  }
-
-  U128 operator-=(U128 x) {
-    return *this = *this - x;
-  }
-
-  U128 operator<<(int i) const {
-    return U128(lower << i, upper << i | lower >> (64-i));
-  }
-
-  U128 operator>>(int i) const {
-    return U128(lower >> i | upper << (64-i), upper >> i);
-  }
-
-  unsigned long long as_ull() const {
-    return lower;
-  }
-};
-
 struct Graph {
-  typedef U128 Weight;
+  typedef long long Weight;
   typedef int EdgeId;
   typedef int NodeId;
 
@@ -202,15 +177,6 @@ struct Graph {
 #include <algorithm>
 #include <iostream>
 
-void u128_sanity_check() {
-  U128 x(112288);
-  assert(x.as_ull() == 112288);
-  x += 1;
-  std::cout << x.as_ull() << std::endl;
-  assert(x.as_ull() == 112289);
-  std::cout << "*** All u128 sanity checks pass ***" << std::endl;
-}
-
 void graph_sanity_check() {
   // Test flood_fill
   {
@@ -329,10 +295,8 @@ void graph_sanity_check() {
 #include <fstream>
 using namespace std;
 
-// #define COUNT_FACTOR 1001
-#define COUNT_SHIFT 20
-// #define ORDER_FACTOR (1LL << 32)
-#define ORDER_SHIFT 32
+#define COUNT_FACTOR 1001
+#define ORDER_FACTOR 500000
 typedef Graph::Weight I;
 
 I f(I& cost, int index) {
@@ -342,16 +306,15 @@ I f(I& cost, int index) {
   // smaller index (ORDER_FACTOR).
 
   // TODO: Consider using 128 bit integer for 'I'.
-  return (((cost << COUNT_SHIFT) + 1) << ORDER_SHIFT) + (1 << index);
+  return (cost * COUNT_FACTOR + 1) * ORDER_FACTOR + index;
 }
 
 I invf(I cost) {
-  return (cost >> ORDER_SHIFT) >> COUNT_SHIFT;
+  return cost/ORDER_FACTOR/COUNT_FACTOR;
 }
 
 int main() {
   // graph_sanity_check();
-  // u128_sanity_check();
 
   ifstream fin("milk6.in");
   ofstream fout("milk6.out");
@@ -360,14 +323,13 @@ int main() {
   Graph graph(N);
   for (int i = 0; i < M; i++) {
     Graph::NodeId a, b;
-    unsigned long long ic;
-    fin >> a >> b >> ic;
-    Graph::Weight c(ic);
+    Graph::Weight c;
+    fin >> a >> b >> c;
     graph.add_edge(a-1, b-1, f(c, i));
   }
   
   vector<Graph::EdgeId> edges;
-  fout << invf(graph.find_min_cut(0, N-1, &edges)).as_ull();
+  fout << invf(graph.find_min_cut(0, N-1, &edges));
   fout << " " << edges.size() << endl;
   for (auto edge_id: edges)
     fout << edge_id+1 << endl;
