@@ -8,6 +8,7 @@ Simple graph library for programming contests.
 
 Some version of this used in:
   * usaco/milk6 (find_min_cut)
+  * usaco/frameup (find_all_topological_orderings)
 
 If you add any features here, make sure to add tests in 'graph_sanity_check'!
 */
