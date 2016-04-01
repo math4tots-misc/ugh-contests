@@ -198,7 +198,7 @@ private:
       const std::vector<std::vector<NodeId>>& adjlist,
       std::vector<int>* en, std::vector<NodeId>* stage,
       std::vector<std::vector<NodeId>>* out) const {
-    if (stage->size() == N) {
+    if ((int) stage->size() == N) {
       out->push_back(*stage);
       return;
     }
@@ -391,4 +391,3 @@ void graph_sanity_check() {
 int main() {
   graph_sanity_check();
 }
-

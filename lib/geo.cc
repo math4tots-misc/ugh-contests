@@ -151,7 +151,7 @@ struct Points {
     hull.push_back(std::get<2>(ptts[0]));
     hull.push_back(std::get<2>(ptts[1]));
 
-    for (int i = 2; i < ptts.size(); i++) {
+    for (std::size_t i = 2; i < ptts.size(); i++) {
       Point c = std::get<2>(ptts[i]);
       Point b = hull[hull.size()-1];
       Point a = hull[hull.size()-2];
