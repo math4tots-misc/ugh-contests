@@ -13,9 +13,6 @@ Some version of this used in:
 If you add any features here, make sure to add tests in 'graph_sanity_check'!
 */
 
-#include <assert.h>
-#include <iostream>
-
 #include <algorithm>
 #include <deque>
 #include <vector>
@@ -223,6 +220,9 @@ private:
 };
 
 using namespace std;
+
+#include <assert.h>
+#include <iostream>
 
 void graph_sanity_check() {
   // Test flood_fill
