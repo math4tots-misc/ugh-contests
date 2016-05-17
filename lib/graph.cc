@@ -13,6 +13,8 @@ Some version of this used in:
 If you add any features here, make sure to add tests in 'graph_sanity_check'!
 */
 
+#x graph.cc
+
 #include <assert.h>
 #include <iostream>
 

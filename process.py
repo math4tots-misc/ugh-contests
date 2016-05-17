@@ -7,6 +7,7 @@ standard_includes = set()
 header_queue = collections.deque()
 processed = dict()
 deps = dict()
+processing = set()
 
 def process_header(hdr):
   with open(os.path.join(os.path.join(rdir, 'lib'), hdr)) as f:
@@ -30,9 +31,11 @@ def process(data, tag, strip_main=True):
   return s
 
 def process_header_recursively(hdr):
-  process_header(hdr)
-  for dep in deps[hdr]:
-    process_header_recursively(dep)
+  if hdr not in processing:
+    processing.add(hdr)
+    process_header(hdr)
+    for dep in deps[hdr]:
+      process_header_recursively(dep)
 
 def process_recursively(data):
   process(data, '<main>', strip_main=False)
