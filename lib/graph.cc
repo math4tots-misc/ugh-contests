@@ -17,12 +17,8 @@ If you add any features here, make sure to add tests in 'graph_sanity_check'!
 #include <deque>
 #include <vector>
 
-struct DefaultGraphOptions {
-  typedef double WeightType;
-};
-
-template <class GraphOptions=DefaultGraphOptions>
-struct Graph {
+template <class GraphOptions>
+struct GraphWithOptions {
   typedef typename GraphOptions::WeightType Weight;
   typedef int EdgeId;
   typedef int NodeId;
@@ -35,9 +31,11 @@ struct Graph {
         id(id), from(from), to(to), weight(weight) {}
   };
 
-  Graph(int N): N(N), ids_of_edges_from(N) {}
+  GraphWithOptions(int N): N(N), ids_of_edges_from(N) {}
 
-  const Edge& edge(EdgeId id) { return edges[id]; }
+  const Edge& edge(EdgeId id) {
+    return edges[id];
+  }
 
   EdgeId add_edge(NodeId from, NodeId to, Weight weight) {
     EdgeId id = edges.size();
@@ -151,7 +149,7 @@ struct Graph {
   Weight find_min_cut(NodeId source, NodeId sink,
                       std::vector<EdgeId>* out) const {
     out->clear();
-    Graph residual_graph = *this;
+    GraphWithOptions residual_graph = *this;
     Weight total_cost = residual_graph.find_max_flow(source, sink);
 
     std::vector<bool> flags;
@@ -219,6 +217,12 @@ private:
   std::vector<std::vector<EdgeId>> ids_of_edges_from;
 };
 
+struct DefaultGraphOptions {
+  typedef double WeightType;
+};
+
+typedef GraphWithOptions<DefaultGraphOptions> Graph;
+
 using namespace std;
 
 #include <assert.h>
@@ -227,7 +231,7 @@ using namespace std;
 void graph_sanity_check() {
   // Test flood_fill
   {
-    Graph<> graph(10);
+    Graph graph(10);
     graph.add_edge(0, 1, 5);
     graph.add_edge(1, 2, 5);
     graph.add_edge(2, 1, 1);
@@ -251,8 +255,8 @@ void graph_sanity_check() {
 
   // Test find_path_bfs
   {
-    Graph<> graph(10);
-    std::vector<Graph<>::EdgeId> path;
+    Graph graph(10);
+    std::vector<Graph::EdgeId> path;
 
     assert(graph.add_edge(0, 1, 1) == 0);
     assert(graph.find_path_bfs(0, 1, &path));
@@ -291,7 +295,7 @@ void graph_sanity_check() {
   {
     // Trivial case.
     {
-      Graph<> graph(2);
+      Graph graph(2);
       assert(graph.add_edge(0, 1, 3) == 0);
       assert(graph.edge(0).weight == 3);
       assert(graph.find_max_flow(0, 1) == 3);
@@ -299,7 +303,7 @@ void graph_sanity_check() {
     }
     // Simple sequence case.
     {
-      Graph<> graph(5);
+      Graph graph(5);
       assert(graph.add_edge(0, 1, 3) == 0);
       assert(graph.add_edge(1, 2, 5) == 1);
       assert(graph.edge(0).weight == 3);
@@ -310,7 +314,7 @@ void graph_sanity_check() {
     }
     // Simple branching case.
     {
-      Graph<> graph(5);
+      Graph graph(5);
       assert(graph.add_edge(0, 1, 3) == 0);
       assert(graph.add_edge(1, 2, 5) == 1);
       assert(graph.add_edge(0, 2, 12) == 2);
@@ -326,60 +330,60 @@ void graph_sanity_check() {
 
   // Test find_min_cut
   {
-    Graph<> graph(5);
+    Graph graph(5);
     assert(graph.add_edge(0, 1, 7) == 0);
     graph.add_edge(1, 2, 77);
     graph.add_edge(2, 3, 777);
-    std::vector<Graph<>::EdgeId> edge_ids;
+    std::vector<Graph::EdgeId> edge_ids;
     assert(graph.find_min_cut(0, 3, &edge_ids) == 7);
     assert(edge_ids.size() == 1);
     assert(edge_ids[0] == 0);
   }
 
-  // Test custom Graph options.
+  // Test custom GraphWithOptions options.
   {
     struct GraphOpt {
       typedef int WeightType;
     };
     static_assert(
-        std::is_same<Graph<GraphOpt>::Weight, int>::value,
-        "test that 'int' 'WeightType' is passed on to Graph");
+        std::is_same<GraphWithOptions<GraphOpt>::Weight, int>::value,
+        "test that 'int' 'WeightType' is passed on to GraphWithOptions");
     static_assert(
-        !std::is_same<Graph<GraphOpt>::Weight, double>::value,
+        !std::is_same<GraphWithOptions<GraphOpt>::Weight, double>::value,
         "double check that Weight is not double");
   }
 
   // Test find_all_topological_orderings
   {
-    Graph<> graph(3);
-    std::vector<std::vector<Graph<>::NodeId>> orderings;
+    Graph graph(3);
+    std::vector<std::vector<Graph::NodeId>> orderings;
     // Test free ordering.
     graph.find_all_topological_orderings(&orderings);
     assert(orderings.size() == 6);  // 3!
     // All of the topological orderings should be in lexicographic order.
-    assert(orderings[0] == std::vector<Graph<>::NodeId>({0, 1, 2}));
-    assert(orderings[1] == std::vector<Graph<>::NodeId>({0, 2, 1}));
+    assert(orderings[0] == std::vector<Graph::NodeId>({0, 1, 2}));
+    assert(orderings[1] == std::vector<Graph::NodeId>({0, 2, 1}));
 
     // Test with just one restriction.
     graph.add_edge(1, 2, 1);
     graph.find_all_topological_orderings(&orderings);
     assert(orderings.size() == 3);
-    assert(orderings[0] == std::vector<Graph<>::NodeId>({0, 1, 2}));
-    assert(orderings[1] == std::vector<Graph<>::NodeId>({1, 0, 2}));
-    assert(orderings[2] == std::vector<Graph<>::NodeId>({1, 2, 0}));
+    assert(orderings[0] == std::vector<Graph::NodeId>({0, 1, 2}));
+    assert(orderings[1] == std::vector<Graph::NodeId>({1, 0, 2}));
+    assert(orderings[2] == std::vector<Graph::NodeId>({1, 2, 0}));
 
     // Test with full constraints.
     graph.add_edge(0, 1, 1);
     graph.find_all_topological_orderings(&orderings);
     assert(orderings.size() == 1);
-    assert(orderings[0] == std::vector<Graph<>::NodeId>({0, 1, 2}));
+    assert(orderings[0] == std::vector<Graph::NodeId>({0, 1, 2}));
 
     // Ignore non-positive edges.
     graph.add_edge(1, 0, -1);
     graph.add_edge(2, 1, 0);
     graph.find_all_topological_orderings(&orderings);
     assert(orderings.size() == 1);
-    assert(orderings[0] == std::vector<Graph<>::NodeId>({0, 1, 2}));
+    assert(orderings[0] == std::vector<Graph::NodeId>({0, 1, 2}));
 
     // Too many constraints.
     graph.add_edge(1, 0, 1);
