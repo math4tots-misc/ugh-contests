@@ -1,0 +1,8 @@
+#!/bin/sh
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+for test in "$DIR/lib/"*.cc; do
+  printf "%s" "testing $test... "
+  cat $test | python "$DIR"/process.py > "$DIR"/a.cc && \
+  g++ --std=c++11 -Wall -Werror -Wpedantic "$DIR"/a.cc && \
+  ./a.out || exit 1
+done

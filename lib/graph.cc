@@ -222,6 +222,8 @@ private:
   std::vector<std::vector<EdgeId>> ids_of_edges_from;
 };
 
+using namespace std;
+
 void graph_sanity_check() {
   // Test flood_fill
   {

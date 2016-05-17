@@ -7,6 +7,7 @@ void hash_combine(std::size_t& seed, const int& v) {
 }
 
 using namespace std;
+
 int main() {
   cout << "There is no test for hash.cc" << endl;
 }
