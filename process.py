@@ -22,7 +22,10 @@ def process(data, tag, strip_main=True):
       assert line.endswith('>'), line
       standard_includes.add(line[len('#include <'):-len('>')])
     elif line.startswith('#x '):
-      deps[tag].add(line[len('#x '):])
+      hdr = line[len('#x '):]
+      if not hdr.endswith('.cc'):
+        hdr += '.cc'
+      deps[tag].add(hdr)
     elif strip_main and line == 'using namespace std;':
       break
     else:
