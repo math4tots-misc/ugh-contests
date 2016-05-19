@@ -34,7 +34,7 @@ public:
   // id of this new edge.
   EdgeId add_edge(NodeId from, NodeId to, Weight weight) {
     EdgeId id = next_edge_id++;
-    edges.emplace(id, Edge(id, from, to, weight));
+    edge_id_map.emplace(id, Edge(id, from, to, weight));
     adjacency_matrix[from][to].insert(id);
     adjacency_matrix2[to][from].insert(id);
     return id;
@@ -43,20 +43,20 @@ public:
   // Deletes edge with given id.
   // Returns true if edge was found and deleted.
   // Returns false and does nothing if no such edge was found.
-  bool delete_edge(EdgeId edge_id) {
-    auto edge_iter = edges.find(edge_id);
-    if (edge_iter == edges.end()) {
+  bool erase_edge(EdgeId edge_id) {
+    auto edge_iter = edge_id_map.find(edge_id);
+    if (edge_iter == edge_id_map.end()) {
       return false;
     }
     Edge& e = edge_iter->second;
     adjacency_matrix[e.from][e.to].erase(e.id);
     adjacency_matrix2[e.to][e.from].erase(e.id);
-    edges.erase(edge_iter);
+    edge_id_map.erase(edge_iter);
     return true;
   }
 
   EdgeId set_edge_weight(EdgeId e, Weight w) {
-    edges.find(e)->second.weight = w;
+    edge_id_map.find(e)->second.weight = w;
     return e;
   }
 
@@ -72,14 +72,14 @@ public:
   }
 
   template <class Iterable>
-  void delete_edges(const Iterable& edge_ids) {
+  void erase_edges(const Iterable& edge_ids) {
     for (EdgeId id: edge_ids) {
-      delete_edge(id);
+      erase_edge(id);
     }
   }
 
-  void delete_edges(NodeId from, NodeId to) {
-    delete_edges(edge_ids(from, to));
+  void erase_edges(NodeId from, NodeId to) {
+    erase_edges(edge_ids(from, to));
   }
 
   // ** Tier 3: Const methods.
@@ -90,7 +90,7 @@ public:
 
   std::vector<EdgeId> all_edge_ids() const {
     std::vector<EdgeId> ids;
-    for (auto& pair: edges) {
+    for (auto& pair: edge_id_map) {
       ids.push_back(pair.first);
     }
     return ids;  // NRVO -Wpessimizing-move
@@ -144,7 +144,7 @@ public:
     if (matching_edge_ids.empty()) {
       return def;
     }
-    return edges.find(matching_edge_ids[0])->second.weight;
+    return edge_id_map.find(matching_edge_ids[0])->second.weight;
   }
 
   bool connected(NodeId from, NodeId to) const {
@@ -157,7 +157,7 @@ private:
   EdgeId next_edge_id;
 
   // EdgeId id -> Edge
-  std::map<EdgeId, Edge> edges;
+  std::map<EdgeId, Edge> edge_id_map;
 
   // NodeId from -> NodeId to -> {EdgeId}
   std::map<NodeId, std::map<NodeId, std::set<EdgeId>>> adjacency_matrix;
@@ -176,7 +176,7 @@ int main() {
     g.set_edge(0, 1, 78);
     assert(g.connected(0, 1));
     assert(g.edge_weight(0, 1, -33) == 78);
-    g.delete_edges(0, 1);
+    g.erase_edges(0, 1);
     assert(!g.connected(0, 1));
     assert(g.edge_weight(0, 1, -33) == -33);
   }
