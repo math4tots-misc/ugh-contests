@@ -6,7 +6,7 @@
 #include <iostream>
 #include <assert.h>
 
-#x err
+#x err.cc
 
 class Graph {
 public:

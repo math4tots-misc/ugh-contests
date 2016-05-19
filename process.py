@@ -9,6 +9,11 @@ processed = dict()
 deps = dict()
 processing = set()
 
+main_cutoff = set([
+    'using namespace std;',
+    "if __name__ == '__main__'",
+])
+
 def process_header(hdr):
   with open(os.path.join(os.path.join(rdir, 'lib'), hdr)) as f:
     data = f.read()
@@ -23,10 +28,8 @@ def process(data, tag, strip_main=True):
       standard_includes.add(line[len('#include <'):-len('>')])
     elif line.startswith('#x '):
       hdr = line[len('#x '):]
-      if not hdr.endswith('.cc'):
-        hdr += '.cc'
       deps[tag].add(hdr)
-    elif strip_main and line == 'using namespace std;':
+    elif strip_main and line in main_cutoff:
       break
     else:
       s += line + '\n'

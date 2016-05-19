@@ -1,8 +1,17 @@
 #!/bin/sh
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-for test in "$DIR/lib/"*.cc; do
-  printf "%s" "testing $test... "
-  cat $test | python "$DIR"/process.py > "$DIR"/a.cc && \
-  g++ --std=c++11 -Wall -Werror -Wpedantic "$DIR"/a.cc && \
-  ./a.out || exit 1
-done
+
+test_one() {
+  printf "%s" "testing $1... "
+  cat "$1" | python "$DIR"/process.py > "$DIR"/a.cc && \
+  g++ --std=c++11 -Wall -Werror -Wpedantic "$DIR"/a.cc -o "$DIR"/a.out && \
+  "$DIR"/a.out || exit 1
+}
+
+if [ $# -eq 0 ]; then
+  for test in "$DIR/lib/"*.cc; do
+    test_one "$test"
+  done
+else
+  test_one "$DIR/lib/$1"
+fi
