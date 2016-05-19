@@ -3,6 +3,9 @@
 #include <set>
 #include <functional>
 
+#include <iostream>
+#include <assert.h>
+
 #x err
 
 class Graph {
@@ -52,19 +55,24 @@ public:
     return true;
   }
 
-  // ** Tier 2: Other mutable methods.
+  EdgeId set_edge_weight(EdgeId e, Weight w) {
+    edges.find(e)->second.weight = w;
+    return e;
+  }
+
+  // ** Tier 2: Mutable methods that depend on only Tier 1 methods
+  // to perform mutations.
 
   EdgeId set_edge(NodeId from, NodeId to, Weight weight) {
     std::vector<EdgeId> matching_edge_ids = edge_ids(from, to);
     if (matching_edge_ids.empty()) {
       return add_edge(from, to, weight);
     }
-    Edge& e = edges.find(matching_edge_ids[0])->second;
-    e.weight = weight;
-    return e.id;
+    return set_edge_weight(matching_edge_ids[0], weight);
   }
 
-  void delete_edges(const std::vector<EdgeId>& edge_ids) {
+  template <class Iterable>
+  void delete_edges(const Iterable& edge_ids) {
     for (EdgeId id: edge_ids) {
       delete_edge(id);
     }
@@ -144,6 +152,7 @@ public:
   }
 
 private:
+
   const Size nnodes;
   EdgeId next_edge_id;
 
@@ -159,15 +168,17 @@ private:
 
 using namespace std;
 
-#include <iostream>
-#include <assert.h>
-
 int main() {
   {
     Graph g(10);
     assert(!g.connected(0, 1));
-    g.set_edge(0, 1, 1);
+    assert(g.edge_weight(0, 1, -33) == -33);
+    g.set_edge(0, 1, 78);
     assert(g.connected(0, 1));
+    assert(g.edge_weight(0, 1, -33) == 78);
+    g.delete_edges(0, 1);
+    assert(!g.connected(0, 1));
+    assert(g.edge_weight(0, 1, -33) == -33);
   }
   cout << "pass" << endl;
 }
