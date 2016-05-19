@@ -1,8 +1,6 @@
 try: input = raw_input
 except NameError: pass
 
-import heapq
-
 def prim(N, edges, S=0):
   """
   Args:

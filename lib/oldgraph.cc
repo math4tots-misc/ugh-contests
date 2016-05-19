@@ -391,7 +391,7 @@ void graph_sanity_check() {
     assert(orderings.size() == 0);
   }
 
-  std::cout << "*** All graph sanity checks pass! ***" << std::endl;
+  std::cout << "pass" << std::endl;
 }
 
 int main() {

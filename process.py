@@ -11,7 +11,7 @@ processing = set()
 
 main_cutoff = set([
     'using namespace std;',
-    "if __name__ == '__main__'",
+    "def main():",
 ])
 
 def process_header(hdr):
@@ -20,7 +20,7 @@ def process_header(hdr):
   return process(data, hdr)
 
 def process(data, tag, strip_main=True):
-  s = '// %s\n' % tag
+  s = ''
   deps[tag] = set()
   for line in data.splitlines():
     if line.startswith('#include <'):
@@ -50,9 +50,11 @@ def process_recursively(data):
 
 def combine():
   used = set()
-  s = '// standard headers\n'
-  for inc in sorted(standard_includes):
-    s += '#include <%s>\n' % inc
+  s = ''
+  if standard_includes:
+    s = '// standard headers\n'
+    for inc in sorted(standard_includes):
+      s += '#include <%s>\n' % inc
   for dep in linearize_deps():
     if dep not in used:
       used.add(dep)
