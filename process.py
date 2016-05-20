@@ -51,11 +51,11 @@ def process_recursively(data):
 
 def combine():
   used = set()
-  s = ''
-  if standard_includes:
-    s = '// standard headers\n'
-    for inc in sorted(standard_includes):
-      s += '#include <%s>\n' % inc
+  s = '''"""prelude"""
+try: input = raw_input
+except NameError: pass
+
+'''
   for dep in linearize_deps():
     if dep not in used:
       used.add(dep)
