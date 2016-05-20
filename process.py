@@ -12,6 +12,7 @@ processing = set()
 main_cutoff = set([
     'using namespace std;',
     "def main():",
+    "if __name__ == '__main__':",
 ])
 
 def process_header(hdr):

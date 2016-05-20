@@ -3,7 +3,7 @@ except NameError: pass
 
 def prim(N, edges, S=0):
   """
-  Args:
+  Args
     N: Number of nodes in graph. Nodes are numbered 0..N-1.
     edges: iterable of 3-tuples, (node1, node2, weight).
     S: Node to start expanding from. Defaults to 0.

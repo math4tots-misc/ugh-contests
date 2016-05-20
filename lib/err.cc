@@ -10,5 +10,5 @@ public:
 using namespace std;
 
 int main() {
-  cout << "pass (no tests for 'err')" << endl;
+  cout << "pass (no tests)" << endl;
 }
