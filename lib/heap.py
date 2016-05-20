@@ -59,6 +59,7 @@ class Heap(object):
 def main():
   h = Heap()
   for i in range(10): h.push(i)
+  assert len(h) == 10, len(h)
   for i in reversed(range(20, 30)): h.push(i)
   for i in range(10, 20): h.push(i)
   assert len(h) == 30, len(h)
