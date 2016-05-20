@@ -18,15 +18,16 @@ def prim(N, edges, S=0):
   the MST of the connected component containing node S.
   """
   adjacency_list = make_adjacency_list_from_edge_list(N, edges)
-  added = {}
+  added = set()
   mst = [None for _ in range(N)]
   queue = Heap()
   queue[S] = 0
 
   while queue:
     n = queue.pop()
+    added.add(n)
     for e, m, r in adjacency_list[n]:
-      if m not in added and mst[m] is None or r < edges[mst[m]][-1]:
+      if m not in added and (mst[m] is None or r < edges[mst[m]][-1]):
         mst[m] = e
         queue[m] = r
 
@@ -63,5 +64,14 @@ if __name__ == '__main__':
       (3, 4, 1),  # not in connected component of '0'
   ]
   assert prim(5, edges, 3) == {3}
+
+  # Verify that 'added' is used
+  edges = [
+      (0, 1, 1),
+      (1, 2, 2),
+      (2, 3, 1),
+  ]
+  mst = prim(4, edges, 0)
+  assert mst == {0, 1, 2}, mst
 
   print('pass')
