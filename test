@@ -3,24 +3,14 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 test_one() {
   printf "%s" "testing $1... "
-  if [[ $1 == *.cc ]]; then
-    cat "$1" | python "$DIR"/process.py > "$DIR"/a.cc && \
-    g++ --std=c++11 -Wall -Werror -Wpedantic "$DIR"/a.cc -o "$DIR"/a.out && \
-    "$DIR"/a.out || exit 1
-  elif [[ $1 == *.py ]]; then
-    cat "$1" | python "$DIR"/process.py > "$DIR"/a.py && \
-    python "$DIR"/a.py || exit 1
-  else
-    echo "*** Invalid extension ***"
-    exit 1
-  fi
+  cat "$1" | python "$DIR"/process.py > "$DIR"/a.py && \
+  python "$DIR"/a.py || exit 1
 }
 
 if [ $# -eq 0 ]; then
-  for test in "$DIR/lib/"*.py; do
+  for test in "$DIR/lib/"*; do
     test_one "$test"
   done
 else
   test_one "$DIR/lib/$1"
 fi
-
