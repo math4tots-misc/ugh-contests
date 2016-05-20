@@ -1,4 +1,7 @@
 #!/bin/sh
+
+# Like 'test', but also tests C++ code
+
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 test_one() {
@@ -17,7 +20,7 @@ test_one() {
 }
 
 if [ $# -eq 0 ]; then
-  for test in "$DIR/lib/"*.py; do
+  for test in "$DIR/lib/"*.{cc,py}; do
     test_one "$test"
   done
 else
